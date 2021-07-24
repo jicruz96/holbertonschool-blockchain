@@ -1,4 +1,5 @@
 #include <hblk_crypto.h>
+#include <openssl/ossl_typ.h>
 
 /**
  * ec_from_pub - creates an EC_KEY structure given a public key
@@ -7,19 +8,24 @@
  **/
 EC_KEY *ec_from_pub(uint8_t const pub[EC_PUB_LEN])
 {
-	EC_KEY *key;
+	EC_KEY *key = NULL;
+	EC_POINT *point;
+	const EC_GROUP *group;
 
-	if (!pub)
-		return (NULL);
-
-	key = EC_KEY_new_by_curve_name(EC_CURVE);
-
-	if (!key || !EC_KEY_oct2key(key, pub, EC_PUB_LEN, NULL))
+	if (
+		!pub                                                        ||
+		!(key   = EC_KEY_new_by_curve_name(EC_CURVE))               ||
+		!(group = EC_KEY_get0_group(key))                           ||
+		!(point = EC_POINT_new(group))                              ||
+		!(EC_POINT_oct2point(group, point, pub, EC_PUB_LEN, NULL))  ||
+		!(EC_KEY_set_public_key(key, point))
+	)
 	{
 		EC_KEY_free(key);
-		return (NULL);
+		key = NULL;
 	}
 
+	EC_POINT_free(point);
 	return (key);
 
 }
