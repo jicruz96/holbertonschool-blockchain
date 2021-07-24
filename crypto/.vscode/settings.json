@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "sha.h": "c",
-        "e_os2.h": "c",
-        "opensslconf.h": "c",
-        "opensslv.h": "c",
-        "hblk_crypto.h": "c"
-    }
-}
