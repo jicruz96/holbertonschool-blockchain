@@ -6,7 +6,7 @@
 #include <string.h>
 
 
-FILE *open_file(char const *folder, char const *file);
+static FILE *open_file(char const *folder, char const *file, char *mode);
 
 
 /**
@@ -24,8 +24,8 @@ int ec_save(EC_KEY *key, char const *folder)
 
 	if (
 		(stat(folder, &st) == -1 && mkdir(folder, 0700) == -1) ||
-		!(pub  = open_file(folder, PUB_FILENAME))              ||
-		!(priv = open_file(folder, PRI_FILENAME))              ||
+		!(pub  = open_file(folder, PUB_FILENAME, "w"))         ||
+		!(priv = open_file(folder, PRI_FILENAME, "w"))         ||
 		!PEM_write_EC_PUBKEY(pub, key)                         ||
 		!PEM_write_ECPrivateKey(priv, key, NULL, NULL, 0, NULL, NULL)
 	)
@@ -42,22 +42,23 @@ int ec_save(EC_KEY *key, char const *folder)
  * open_file - given a file and folder, open file and return reference to it
  * @folder: file's parent folder
  * @filename: name of file to open
+ * @mode: mode string for fopen() call
  * Return: pointer to opened file or NULL on failure
  **/
-FILE *open_file(char const *folder, char const *filename)
+static FILE *open_file(char const *folder, char const *filename, char *mode)
 {
-	size_t size = sizeof(char) * (strlen(folder) + 1 + strlen(filename) + 1);
-	char *filepath = malloc(size);
+	char *filepath;
 	FILE *file;
 
+	if (!folder || !filename)
+		return (NULL);
 
-	if (filepath)
-	{
-		sprintf(filepath, "%s/%s", folder, filename);
-		file = fopen(filepath, "w");
-		free(filepath);
-		return (file);
-	}
+	filepath = malloc(sizeof(char) * (strlen(folder) + strlen(filename) + 2));
+	if (!filepath)
+		return (NULL);
 
-	return (NULL);
+	sprintf(filepath, "%s/%s", folder, filename);
+	file = fopen(filepath, mode);
+	free(filepath);
+	return (file);
 }
