@@ -15,10 +15,11 @@ int ec_verify(EC_KEY const *key, uint8_t const *msg,
 	int status;
 
 	if (
-		!key    ||
-		!msg    ||
-		!msglen ||
-		!sig    ||
+		!key      ||
+		!msg      ||
+		!msglen   ||
+		!sig      ||
+		!sig->len ||
 		!(tmp = EC_KEY_dup(key)) ||
 		!ECDSA_verify(0, msg, msglen, sig->sig, sig->len, tmp)
 	)
