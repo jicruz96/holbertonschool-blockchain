@@ -26,6 +26,7 @@ int ec_verify(EC_KEY const *key, uint8_t const *msg,
 	else
 		status = 1;
 
-	EC_KEY_free(tmp);
+	if (tmp)
+		EC_KEY_free(tmp);
 	return (status);
 }
