@@ -1,20 +1,60 @@
 #include <blockchain.h>
+#include <string.h>
 
-/*
-Write a function that verifies that a Block is valid
+/**
+ * is_genesis_block - checks if a block is the Genesis block
+ * @block: pointer to block
+ * Return: 1 if it is, 0 if it isn't
+ **/
+static int is_genesis_block(block_t const *block)
+{
+	return (
+		block->data.len == sizeof(GENESIS_DATA) - 1 &&
+		!memcmp(block->data.buffer, GENESIS_DATA, block->data.len) &&
+		!block->info.index &&
+		!block->info.difficulty &&
+		!block->info.nonce &&
+		block->info.timestamp == GENESIS_TIME &&
+		!block->info.prev_hash
+	);
+}
 
-Prototype: int block_is_valid(block_t const *block, block_t const *prev_block);, where:
-block points to the Block to check
-prev_block points to the previous Block in the Blockchain, or is NULL if block is the first Block of the chain
-The following requirements must be fulfilled for a Block to be valid:
-block should not be NULL
-prev_block should be NULL ONLY if block‘s index is 0
-If the Block’s index is 0, the Block should match the Genesis Block described in the first task
-The Block’s index must be the previous Block’s index, plus 1
-The computed hash of the previous block must match the one it stores
-The computed hash of the previous block must match the reference one stored in block
-The computed hash of the Block must match the one it stores
-You don’t have to worry about the timestamp and the difficulty for this iteration of the Blockchain.
-The Block data length must not exceed BLOCKCHAIN_DATA_MAX
+/**
+ * block_is_valid - verifies that a Block is valid
+ * @block: Block to check
+ * @prev_block: previous Block in the Blockchain, or NULL if block is first one
+ * Return: 1 if valid | 0 if not
+ **/
+int block_is_valid(block_t const *block, block_t const *prev_block)
+{
+	uint8_t tmp[SHA256_DIGEST_LENGTH];
 
-*/
+	if (!block)
+		return (0);
+
+	if (!block->info.index && (prev_block || !is_genesis_block(block)))
+		return (0);
+
+	if (!prev_block)
+		return (0);
+
+	if (block->info.index != prev_block->info.index + 1)
+		return (0);
+
+	if (block->data.len > BLOCKCHAIN_DATA_MAX)
+		return (0);
+
+	if (!block_hash(block, tmp))
+		return (0);
+
+	if (memcmp(tmp, block->hash, sizeof(tmp)))
+		return (0);
+
+	if (!block_hash(prev_block, tmp))
+		return (0);
+
+	if (memcmp(tmp, block->info.prev_hash, sizeof(tmp)))
+		return (0);
+
+	return (1);
+}

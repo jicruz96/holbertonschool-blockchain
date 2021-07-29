@@ -112,10 +112,11 @@ write_attr(int fd, int encoding, void *attr, size_t size);
 int
 read_attr(int fd, int encoding, void *attr, size_t size);
 
-
-
-
 blockchain_t
 *blockchain_deserialize(char const *path);
+
+int
+block_is_valid(block_t const *block, block_t const *prev_block);
+
 
 #endif /* _BLOCKCHAIN_ */
