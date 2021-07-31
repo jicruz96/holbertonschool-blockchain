@@ -41,9 +41,11 @@ int blockchain_serialize(blockchain_t const *blockchain, char const *path)
 void serialize_blocks(int fd, int encoding, llist_t *list)
 {
 	block_t *block;
+	int i, num_blocks = llist_size(list);
 
-	while ((block = (block_t *)llist_pop(list)))
+	for (i = 0; i < num_blocks; i++)
 	{
+		block = llist_get_node_at(list, i);
 		write_attr(fd, encoding, &block->info.index,      sizeof(block->info.index));
 		write_attr(fd, encoding, &block->info.difficulty, sizeof(block->info.difficulty));
 		write_attr(fd, encoding, &block->info.timestamp,  sizeof(block->info.timestamp));
