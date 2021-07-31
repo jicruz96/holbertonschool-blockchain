@@ -39,7 +39,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 	read_attr(fd, encoding, &num_blocks, sizeof(num_blocks));
 	while (num_blocks--)
 	{
-		block = malloc(sizeof(block_t));
+		block = calloc(1, sizeof(block_t));
 		if (
 			!read_attr(fd, encoding, &block->info.index,      sizeof(block->info.index))      ||
 			!read_attr(fd, encoding, &block->info.difficulty, sizeof(block->info.difficulty)) ||
