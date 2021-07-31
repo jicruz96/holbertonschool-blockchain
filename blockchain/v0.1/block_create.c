@@ -15,7 +15,7 @@
 block_t
 *block_create(block_t const *prev, int8_t const *data, uint32_t data_len)
 {
-	block_t *block = malloc(sizeof(block_t));
+	block_t *block = calloc(1, sizeof(block_t));
 
 	if (block)
 	{
