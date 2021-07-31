@@ -8,6 +8,7 @@
  **/
 static int is_genesis_block(block_t const *block)
 {
+	static uint8_t buf[SHA256_DIGEST_LENGTH] = {0};
 	return (
 		block->data.len == sizeof(GENESIS_DATA) - 1 &&
 		!memcmp(block->data.buffer, GENESIS_DATA, block->data.len) &&
@@ -15,7 +16,9 @@ static int is_genesis_block(block_t const *block)
 		!block->info.difficulty &&
 		!block->info.nonce &&
 		block->info.timestamp == GENESIS_TIME &&
-		!block->info.prev_hash
+		printf(".") &&
+		!memcmp(block->info.prev_hash, buf, sizeof(buf)) &&
+		printf(".")
 	);
 }
 
@@ -30,31 +33,33 @@ int block_is_valid(block_t const *block, block_t const *prev_block)
 	uint8_t tmp[SHA256_DIGEST_LENGTH];
 
 	if (!block)
-		return (0);
+		return (1);
 
-	if (!block->info.index && (prev_block || !is_genesis_block(block)))
-		return (0);
+	if (!block->info.index)
+		return (prev_block || !is_genesis_block(block));
 
 	if (!prev_block)
-		return (0);
+		return (1);
 
 	if (block->info.index != prev_block->info.index + 1)
-		return (0);
+		return (1);
 
 	if (block->data.len > BLOCKCHAIN_DATA_MAX)
-		return (0);
+		return (1);
+
 
 	if (!block_hash(block, tmp))
-		return (0);
+		return (1);
 
 	if (memcmp(tmp, block->hash, sizeof(tmp)))
-		return (0);
+		return (1);
+
 
 	if (!block_hash(prev_block, tmp))
-		return (0);
+		return (1);
 
 	if (memcmp(tmp, block->info.prev_hash, sizeof(tmp)))
-		return (0);
+		return (1);
 
-	return (1);
+	return (0);
 }
