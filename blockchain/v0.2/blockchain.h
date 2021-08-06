@@ -22,6 +22,7 @@
 /* blockchain difficulty macros */
 #define BLOCK_GENERATION_INTERVAL 1 /* how often a block should be found (seconds) */
 #define DIFFICULTY_ADJUSTMENT_INTERVAL 5 /* how often the difficulty should be adjusted (blocks) */
+#define EXPECTED_TIME_BETWEEN_ADJUSTMENTS (BLOCK_GENERATION_INTERVAL * DIFFICULTY_ADJUSTMENT_INTERVAL)
 
 /**
  * struct blockchain_s - Blockchain structure
