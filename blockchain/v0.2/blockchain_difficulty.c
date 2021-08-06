@@ -17,9 +17,11 @@ void adjust_difficulty(blockchain_t const *blockchain, block_t *last_block, uint
 	block_t *last_adjusted_block = llist_get_node_at(blockchain->chain, last_block->info.index - DIFFICULTY_ADJUSTMENT_INTERVAL);
 	uint64_t actual_time = last_block->info.timestamp - last_adjusted_block->info.timestamp;
 
-	if (actual_time < EXPECTED_TIME_BETWEEN_ADJUSTMENTS / 2)
+	fprintf(stderr, "[%u] E: %d | A: %lu | lbts: %lu | labits: %lu\n", last_block->info.index, EXPECTED_TIME_BETWEEN_ADJUSTMENTS, actual_time, last_block->info.timestamp, last_adjusted_block->info.timestamp);
+
+	if (actual_time <= EXPECTED_TIME_BETWEEN_ADJUSTMENTS / 2)
 		*difficulty += 1;
-	else if (*difficulty && actual_time > EXPECTED_TIME_BETWEEN_ADJUSTMENTS * 2)
+	else if (*difficulty && actual_time >= EXPECTED_TIME_BETWEEN_ADJUSTMENTS * 2)
 		*difficulty -= 1;
 }
 
