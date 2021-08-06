@@ -7,22 +7,25 @@
  **/
 uint32_t blockchain_difficulty(blockchain_t const *blockchain)
 {
-/*
-The following macros must be defined in your header file blockchain.h
-    BLOCK_GENERATION_INTERVAL
-        Value: 1 (Will be changed during correction)
-        Defines how often (in seconds) a Block should be found
-    DIFFICULTY_ADJUSTMENT_INTERVAL
-        Value: 5 (Will be changed during correction)
-        Defines how often (in Blocks) the difficulty should be adjusted
-    If the latest Block’s index is a multiple of DIFFICULTY_ADJUSTMENT_INTERVAL, AND that it is not the Genesis Block, the difficulty must be adjusted. Otherwise, the difficulty of the latest Block in blockchain is returned
-    Difficulty adjustment:
-        Retrieve the last Block for which an adjustment was made (the Block with index <blockchain_size> - DIFFICULTY_ADJUSTMENT_INTERVAL)
-        Compute the expected elapsed time between the two Blocks
-        Compute the actual elapsed time
-        The difficulty must be incremented if the elapsed time is lower than half the expected elapsed time
-        The difficulty must be decremented if the elapsed time is greater than twice the expected elapsed time
-        The difficulty should not change otherwise
-*/
-    return (0);
+	block_t *block, *last_adjusted_block;
+	uint64_t expected_time, actual_time;
+
+	if (!blockchain || !(block = llist_get_tail(blockchain->chain)))
+		return (0);
+
+
+	if (block->info.index == 0 || block->info.index % DIFFICULTY_ADJUSTMENT_INTERVAL)
+		return (block->info.difficulty);
+
+	last_adjusted_block = llist_get_node_at(blockchain->chain, block->info.index - (block->info.index % DIFFICULTY_ADJUSTMENT_INTERVAL));
+	expected_time = BLOCK_GENERATION_INTERVAL * (block->info.index - last_adjusted_block->info.index);
+	actual_time = block->info.timestamp - last_adjusted_block->info.timestamp;
+
+	if (actual_time < expected_time / 2)
+		return (block->info.difficulty + 1);
+
+	if (actual_time > expected_time * 2)
+		return (block->info.difficulty - 1);
+
+	return (block->info.difficulty);
 }
