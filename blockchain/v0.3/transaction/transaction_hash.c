@@ -17,7 +17,8 @@ uint8_t *transaction_hash(transaction_t const *transaction, uint8_t hash_buf[SHA
 	num_inputs  = llist_size(transaction->inputs);
 	num_outputs = llist_size(transaction->outputs);
 
-	buf = calloc(1, SHA256_DIGEST_LENGTH * (3 * num_inputs + num_outputs));
+	if (!(buf = calloc(1, SHA256_DIGEST_LENGTH * (3 * num_inputs + num_outputs))))
+		return (NULL);
 
 
 	for (i = 0; i < num_inputs; i++)
@@ -34,5 +35,12 @@ uint8_t *transaction_hash(transaction_t const *transaction, uint8_t hash_buf[SHA
 		size += sizeof(tmp_out->hash);
 	}
 
-	return (sha256(buf, size, hash_buf));
+	if (!sha256(buf, size, hash_buf))
+	{
+		free(buf);
+		return (NULL);
+	}
+
+	free(buf);
+	return (hash_buf);
 }
