@@ -2,6 +2,7 @@
 #define _BLOCKCHAIN_
 
 #include <llist.h>
+#include "transaction/transaction.h"
 #include "../../crypto/hblk_crypto.h"
 #define true 1
 #define false 0
@@ -23,7 +24,6 @@
 #define BLOCK_GENERATION_INTERVAL 1 /* how often a block should be found (seconds) */
 #define DIFFICULTY_ADJUSTMENT_INTERVAL 5 /* how often the difficulty should be adjusted (blocks) */
 #define EXPECTED_TIME_BETWEEN_ADJUSTMENTS (BLOCK_GENERATION_INTERVAL * DIFFICULTY_ADJUSTMENT_INTERVAL)
-#define COINBASE_AMOUNT 50
 
 /* Block structures */
 
@@ -105,12 +105,8 @@ void block_destroy(block_t *block);
 void blockchain_destroy(blockchain_t *blockchain);
 uint8_t *block_hash(block_t const *block, uint8_t hash_buf[SHA256_DIGEST_LENGTH]);
 int blockchain_serialize(blockchain_t const *blockchain, char const *path);
-void serialize_blocks(int fd, int encoding, llist_t *list);
-void write_attr(int fd, int encoding, void *attr, size_t size);
-int read_attr(int fd, int encoding, void *attr, size_t size);
 blockchain_t *blockchain_deserialize(char const *path);
-int block_is_valid(block_t const *block, block_t const *prev_block);
-
+int block_is_valid(block_t const *block, block_t const *prev_block, llist_t *all_unspent);
 /* Block mining functions */
 int hash_matches_difficulty(uint8_t const hash[SHA256_DIGEST_LENGTH], uint32_t difficulty);
 void block_mine(block_t *block);
