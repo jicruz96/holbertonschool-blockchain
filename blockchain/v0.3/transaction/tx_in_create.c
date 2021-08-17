@@ -14,7 +14,7 @@ tx_in_t *tx_in_create(unspent_tx_out_t const *unspent)
 		return (NULL);
 
 	memcpy(tx, unspent, sizeof(tx->block_hash) + sizeof(tx->tx_id));
-	sha256((const int8_t *)&unspent->out, sizeof(unspent->out), tx->tx_out_hash);
+	memcpy(tx->tx_out_hash, &unspent->out.hash, sizeof(tx->tx_out_hash));
 	memset(&tx->sig, 0, sizeof(tx->sig));
 	return (tx);
 }
