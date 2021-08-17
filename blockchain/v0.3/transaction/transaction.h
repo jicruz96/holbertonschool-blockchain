@@ -1,7 +1,11 @@
 #ifndef _TRANSACTION_H_
 #define _TRANSACTION_H_
 
-#include "../blockchain.h"
+#include <llist.h>
+#include "../../../crypto/hblk_crypto.h"
+
+#define COINBASE_AMOUNT 50
+
 
 /* Transaction structures */
 
