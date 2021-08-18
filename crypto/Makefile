@@ -48,3 +48,7 @@ $(T7): $($(T7)_files:.c=.o)
 all_files = $(addsuffix .o,$(T0) $(T1) $(T2) $(T3) $(T4) $(T5) $(T6) $(T7))
 libhblk_crypto.a: $(all_files)
 	ar rcs libhblk_crypto.a $(all_files)
+
+other_files = $(addsuffix .o, $(addprefix ../blockchain/v0.3/transaction/, tx_out_create unspent_tx_out_create tx_in_create transaction_hash tx_in_sign transaction_create transaction_is_valid coinbase_create coinbase_is_valid transaction_destroy update_unspent)) $(all_files)
+libhblk_blockchain.a: $(other_files)
+	ar rcs libhblk_blockchain.a $(other_files)
