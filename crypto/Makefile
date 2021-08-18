@@ -50,5 +50,8 @@ libhblk_crypto.a: $(all_files)
 	ar rcs libhblk_crypto.a $(all_files)
 
 other_files = $(addsuffix .o, $(addprefix ../blockchain/v0.3/transaction/, tx_out_create unspent_tx_out_create tx_in_create transaction_hash tx_in_sign transaction_create transaction_is_valid coinbase_create coinbase_is_valid transaction_destroy update_unspent)) $(all_files)
-libhblk_blockchain.a: $(other_files)
+libhblk_blockchain.a: pwd $(other_files)
 	ar rcs libhblk_blockchain.a $(other_files)
+
+pwd:
+	pwd
