@@ -24,14 +24,14 @@ uint8_t
 	else
 		size = 0;
 	len = sizeof(block->info) + block->data.len;
-	buf = calloc(1, len + (size * sizeof(transaction_t)));
+	buf = calloc(1, len + (size * sizeof(tmp_tx->id)));
 	memcpy(buf, block, len);
 
 	for (i = 0 ; i < size; i++)
 	{
 		tmp_tx = llist_get_node_at(block->transactions, i);
-		memcpy(buf + len, tmp_tx, sizeof(*tmp_tx));
-		len += sizeof(*tmp_tx);
+		memcpy(buf + len, tmp_tx->id, sizeof(tmp_tx->id));
+		len += sizeof(tmp_tx->id);
 	}
 
 	if (!sha256((int8_t const *)buf, len, hash_buf))
