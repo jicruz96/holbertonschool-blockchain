@@ -38,8 +38,16 @@ static int block_transactions_are_valid(block_t const *block, llist_t *all_unspe
 	for (i = 0; i < size; i++)
 	{
 		tx = llist_get_node_at(block->transactions, i);
-		if ((i && !transaction_is_valid(tx, all_unspent)) || !coinbase_is_valid(tx, block->info.index))
-			return (0);
+		if (i)
+		{
+			if (!transaction_is_valid(tx, all_unspent))
+				return (0);
+		}
+		else
+		{
+			if (!coinbase_is_valid(tx, block->info.index))
+				return (0);
+		}
 	}
 
 	return (1);
