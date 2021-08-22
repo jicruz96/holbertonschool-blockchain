@@ -20,7 +20,8 @@ static void serialize_transaction_outputs(int fd, int encoding, llist_t *list);
  **/
 int blockchain_serialize(blockchain_t const *blockchain, char const *path)
 {
-	int fd, num_blocks, num_unspent;
+	int fd;
+	uint32_t num_blocks, num_unspent;
 	uint8_t encoding = HBLK_ENDIAN;
 
 	if (!blockchain || !path)
@@ -58,6 +59,8 @@ static void serialize_blocks(int fd, int encoding, llist_t *list)
 	{
 		block = llist_get_node_at(list, i);
 		num_txs = llist_size(block->transactions);
+		if (num_txs == -1)
+			num_txs = 0;
 		write_attr(fd, encoding, &block->info.index,      sizeof(block->info.index));
 		write_attr(fd, encoding, &block->info.difficulty, sizeof(block->info.difficulty));
 		write_attr(fd, encoding, &block->info.timestamp,  sizeof(block->info.timestamp));

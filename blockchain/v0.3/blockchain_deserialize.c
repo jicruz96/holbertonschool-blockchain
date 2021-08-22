@@ -10,13 +10,19 @@ static llist_t *read_transactions(int fd, int encoding);
 static llist_t *read_inputs(int fd, int encoding, int num_inputs);
 static llist_t *read_outputs(int fd, int encoding, int num_outputs);
 
+/**
+ * read_transactions - reads transactions from a serialized blockchain file
+ * @fd: file descriptor
+ * @encoding: file encoding
+ * Return: list of transactions
+ **/
 static llist_t *read_transactions(int fd, int encoding)
 {
 	uint32_t num_txs, num_inputs, num_outputs;
 	transaction_t *tx;
 	llist_t *list;
 
-	if (!read_attr(fd, encoding, &num_txs, sizeof(num_txs)) || !num_txs || !(list = llist_create(MT_SUPPORT_FALSE)))
+	if (!read_attr(fd, encoding, &num_txs, sizeof(num_txs)) || !(list = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 
 	while (num_txs--)
