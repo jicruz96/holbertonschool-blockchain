@@ -66,8 +66,5 @@ $(T10): $($(T10)_files:.c=.o)
 
 FILES = $(addprefix $(DIR)/, $(T0) $(T1) $(T2) $(T3) $(T4) $(T5) $(T6) $(T7) $(T8) $(T9) $(T10))
 OBJ_FILES = $(BLOCKCHAIN_FILES:.c=.o) $(addsuffix .o,$(FILES)) 
-libhblk_blockchain.a: pwd $(OBJ_FILES)
+libhblk_blockchain.a: $(OBJ_FILES)
 	ar rcs libhblk_blockchain.a $(OBJ_FILES)
-
-pwd:
-	pwd
