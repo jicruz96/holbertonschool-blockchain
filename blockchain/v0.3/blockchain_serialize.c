@@ -162,7 +162,7 @@ static void serialize_transaction_outputs(int fd, int encoding, llist_t *list)
 		out = llist_get_node_at(list, i);
 		write_attr(fd, encoding, &out->amount, sizeof(out->amount));
 		write_attr(fd, encoding, &out->pub, sizeof(out->pub));
-		write_attr(fd, encoding, &out->hash, sizeof(out->pub));
+		write_attr(fd, encoding, &out->hash, sizeof(out->hash));
 	}
 }
 

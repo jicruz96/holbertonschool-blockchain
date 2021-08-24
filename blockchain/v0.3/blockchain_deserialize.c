@@ -10,6 +10,7 @@ static llist_t *read_transactions(int fd, int encoding);
 static llist_t *read_inputs(int fd, int encoding, int num_inputs);
 static llist_t *read_outputs(int fd, int encoding, int num_outputs);
 
+
 /**
  * read_transactions - reads transactions from a serialized blockchain file
  * @fd: file descriptor
@@ -22,9 +23,9 @@ static llist_t *read_transactions(int fd, int encoding)
 	transaction_t *tx;
 	llist_t *list;
 
+
 	if (!read_attr(fd, encoding, &num_txs, sizeof(num_txs)) || !(list = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
-
 	while (num_txs--)
 	{
 		tx = calloc(1, sizeof(transaction_t));
@@ -57,11 +58,13 @@ static llist_t *read_inputs(int fd, int encoding, int num_inputs)
 	llist_t *inputs;
 	tx_in_t *in;
 
+
 	if (!num_inputs || !(inputs = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 
 	while (num_inputs--)
 	{
+
 		in = calloc(1, sizeof(tx_in_t));
 		llist_add_node(inputs, in, ADD_NODE_REAR);
 		if (
@@ -160,6 +163,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 			!(block->transactions = read_transactions(fd, encoding))
 		)
 		{
+			if (block->transactions == NULL)
 			llist_destroy(blockchain->chain, true, (node_dtor_t)block_destroy);
 			free(blockchain);
 			close(fd);
@@ -175,7 +179,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 			!read_attr(fd, encoding, &utxo->tx_id, sizeof(utxo->tx_id)) ||
 			!read_attr(fd, encoding, &utxo->out.amount, sizeof(utxo->out.amount)) ||
 			!read_attr(fd, encoding, &utxo->out.pub, sizeof(utxo->out.pub)) ||
-			!read_attr(fd, encoding, &utxo->out.hash, sizeof(utxo->out.pub))
+			!read_attr(fd, encoding, &utxo->out.hash, sizeof(utxo->out.hash))
 		)
 		{
 			llist_destroy(blockchain->chain, true, (node_dtor_t)block_destroy);
@@ -200,7 +204,14 @@ blockchain_t *blockchain_deserialize(char const *path)
  **/
 static int read_attr(int fd, int encoding, void *attr, size_t size)
 {
-	if (read(fd, attr, size) != (ssize_t)size)
+	static int bytes_read;
+	ssize_t res;
+
+	res = read(fd, attr, size);
+	bytes_read += res;
+	if (res == -1)
+		perror(NULL);
+	if (res != (ssize_t)size)
 		return (0);
 
 	if (encoding == MSB)
