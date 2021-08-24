@@ -26,6 +26,10 @@ static llist_t *read_transactions(int fd, int encoding)
 
 	if (!read_attr(fd, encoding, &num_txs, sizeof(num_txs)) || !(list = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
+
+	if (num_txs == 0)
+		return (NULL);
+
 	while (num_txs--)
 	{
 		tx = calloc(1, sizeof(transaction_t));
@@ -159,8 +163,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 			!read_attr(fd, encoding,  block->info.prev_hash,  sizeof(block->info.prev_hash))  ||
 			!read_attr(fd, encoding, &block->data.len,        sizeof(block->data.len))        ||
 			!read_attr(fd, encoding,  block->data.buffer,     block->data.len)                ||
-			!read_attr(fd, encoding,  block->hash,            sizeof(block->hash))            ||
-			!(block->transactions = read_transactions(fd, encoding))
+			!read_attr(fd, encoding,  block->hash,            sizeof(block->hash))
 		)
 		{
 			if (block->transactions == NULL)
@@ -169,6 +172,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 			close(fd);
 			return (NULL);
 		}
+		block->transactions = read_transactions(fd, encoding);
 		llist_add_node(blockchain->chain, block, ADD_NODE_REAR);
 	}
 	while (num_unspent--)
