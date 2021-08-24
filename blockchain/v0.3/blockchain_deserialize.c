@@ -166,7 +166,6 @@ blockchain_t *blockchain_deserialize(char const *path)
 			!read_attr(fd, encoding,  block->hash,            sizeof(block->hash))
 		)
 		{
-			if (block->transactions == NULL)
 			llist_destroy(blockchain->chain, true, (node_dtor_t)block_destroy);
 			free(blockchain);
 			close(fd);
