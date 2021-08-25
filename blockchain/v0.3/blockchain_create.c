@@ -71,6 +71,7 @@ blockchain_t *blockchain_create(void)
 		free(blockchain);
 		return (NULL);
 	}
+	genesis->transactions = NULL;
 
 
 	return (blockchain);
