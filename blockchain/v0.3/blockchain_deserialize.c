@@ -34,7 +34,7 @@ static llist_t *read_transactions(int fd, int encoding)
 		return (NULL);
 	}
 
-	while (num_txs-- >= 0)
+	while ((int)num_txs-- >= 0)
 	{
 		tx = calloc(1, sizeof(transaction_t));
 		llist_add_node(list, tx, ADD_NODE_REAR);
@@ -71,7 +71,7 @@ static llist_t *read_inputs(int fd, int encoding, int num_inputs)
 	if (num_inputs <= 0 || !(inputs = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 
-	while (pf("inputs left = %d\n", num_inputs) && num_inputs-- >= 0)
+	while (pf("inputs left = %d\n", num_inputs) && (int)num_inputs-- >= 0)
 	{
 
 		in = calloc(1, sizeof(tx_in_t));
@@ -107,7 +107,7 @@ static llist_t *read_outputs(int fd, int encoding, int num_outputs)
 	if (num_outputs <= 0 || !(outputs = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 
-	while (pf("outputs left = %d\n", num_outputs) && num_outputs-- >= 0)
+	while (pf("outputs left = %d\n", num_outputs) && (int)num_outputs-- >= 0)
 	{
 		out = calloc(1, sizeof(tx_out_t));
 		llist_add_node(outputs, out, ADD_NODE_REAR);
@@ -159,7 +159,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 	read_attr(fd, encoding, &num_blocks, sizeof(num_blocks));
 	read_attr(fd, encoding, &num_unspent, sizeof(num_unspent));
 	p("reading blocks\n");
-	while (pf("blocks left = %d\n", num_blocks) && num_blocks-- >= 0)
+	while (pf("blocks left = %d\n", num_blocks) && (int)num_blocks-- >= 0)
 	{
 		block = calloc(1, sizeof(block_t));
 		if (
@@ -182,7 +182,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 		llist_add_node(blockchain->chain, block, ADD_NODE_REAR);
 	}
 	p("reading utxos\n");
-	while (pf("utxos left = %d\n", num_unspent) && num_unspent-- >= 0)
+	while (pf("utxos left = %d\n", num_unspent) && (int)num_unspent-- >= 0)
 	{
 		utxo = calloc(1, sizeof(unspent_tx_out_t));
 		if (
