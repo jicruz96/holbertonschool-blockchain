@@ -28,7 +28,7 @@ static llist_t *read_transactions(int fd, int encoding)
 	if (!read_attr(fd, encoding, &num_txs, sizeof(num_txs)) || !(list = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 	pf("num_txs = %d\n", num_txs);
-	if (num_txs == 0)
+	if (num_txs <= 0)
 	{
 		llist_destroy(list, false, NULL);
 		return (NULL);
