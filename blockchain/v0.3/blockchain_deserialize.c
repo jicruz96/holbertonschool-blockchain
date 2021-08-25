@@ -28,13 +28,13 @@ static llist_t *read_transactions(int fd, int encoding)
 	if (!read_attr(fd, encoding, &num_txs, sizeof(num_txs)) || !(list = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 	pf("num_txs = %d\n", num_txs);
-	if (num_txs <= 0)
+	if ((int)num_txs <= 0)
 	{
 		llist_destroy(list, false, NULL);
 		return (NULL);
 	}
 
-	while (num_txs--)
+	while (num_txs-- >= 0)
 	{
 		tx = calloc(1, sizeof(transaction_t));
 		llist_add_node(list, tx, ADD_NODE_REAR);
@@ -68,10 +68,10 @@ static llist_t *read_inputs(int fd, int encoding, int num_inputs)
 	tx_in_t *in;
 
 	p("reading inputs\n");
-	if (!num_inputs || !(inputs = llist_create(MT_SUPPORT_FALSE)))
+	if (num_inputs <= 0 || !(inputs = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 
-	while (pf("inputs left = %d\n", num_inputs) && num_inputs--)
+	while (pf("inputs left = %d\n", num_inputs) && num_inputs-- >= 0)
 	{
 
 		in = calloc(1, sizeof(tx_in_t));
@@ -104,10 +104,10 @@ static llist_t *read_outputs(int fd, int encoding, int num_outputs)
 	tx_out_t *out;
 
 	p("reading outputs\n");
-	if (!num_outputs || !(outputs = llist_create(MT_SUPPORT_FALSE)))
+	if (num_outputs <= 0 || !(outputs = llist_create(MT_SUPPORT_FALSE)))
 		return (NULL);
 
-	while (pf("outputs left = %d\n", num_outputs) && num_outputs--)
+	while (pf("outputs left = %d\n", num_outputs) && num_outputs-- >= 0)
 	{
 		out = calloc(1, sizeof(tx_out_t));
 		llist_add_node(outputs, out, ADD_NODE_REAR);
@@ -159,7 +159,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 	read_attr(fd, encoding, &num_blocks, sizeof(num_blocks));
 	read_attr(fd, encoding, &num_unspent, sizeof(num_unspent));
 	p("reading blocks\n");
-	while (pf("blocks left = %d\n", num_blocks) && num_blocks--)
+	while (pf("blocks left = %d\n", num_blocks) && num_blocks-- >= 0)
 	{
 		block = calloc(1, sizeof(block_t));
 		if (
@@ -182,7 +182,7 @@ blockchain_t *blockchain_deserialize(char const *path)
 		llist_add_node(blockchain->chain, block, ADD_NODE_REAR);
 	}
 	p("reading utxos\n");
-	while (pf("utxos left = %d\n", num_unspent) && num_unspent--)
+	while (pf("utxos left = %d\n", num_unspent) && num_unspent-- >= 0)
 	{
 		utxo = calloc(1, sizeof(unspent_tx_out_t));
 		if (
