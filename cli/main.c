@@ -15,26 +15,30 @@ void print_error(char *msg)
  * error_out - function
  * @msg: message
  **/
-void error_out(char *msg)
+int error_out(char *msg)
 {
 	print_error(msg);
 	running = 0;
+	return (errno);
 }
 
 /**
  * startup - startup globals
  */
-__attribute__((constructor))void startup(void)
+__attribute__((constructor))int startup(void)
 {
 	wallets = llist_create(MT_SUPPORT_FALSE);
 	if (!wallets)
-		error_out("wallets list failed to initialize");
+		return (error_out("wallets list failed to initialize"));
 	transaction_pool = llist_create(MT_SUPPORT_FALSE);
 	if (!transaction_pool)
-		error_out("wallets list failed to initialize");
+		return (error_out("local transaction pool failed to initialize"));
+	line_size = 0;
+	line = NULL;
 	running = 1;
 	current_wallet = NULL;
 	blockchain = NULL;
+	return (0);
 }
 
 /**
@@ -43,6 +47,8 @@ __attribute__((constructor))void startup(void)
 __attribute__((destructor))void cleanup(void)
 {
 	llist_destroy(wallets, 1, (node_dtor_t)EC_KEY_free);
+	blockchain_destroy(blockchain);
+	free(line);
 }
 
 /**
@@ -54,16 +60,23 @@ int wallet_load(char **args)
 {
 	char *folder = args[1] ? args[1] : ".";
 	EC_KEY *wallet = ec_load(folder);
-	char response[1];
 
 	if (!wallet)
 	{
 		printf("No wallet in folder [%s]\n", folder);
-		printf("Create new key? Press ENTER. Press any other key to abort:\n");
-		scanf("%c", response);
-		if (*response != '\n')
+WALLET_LOAD_CREATE_KEY_CONFIRM:
+		printf("Create new key? [y/n]: ");
+		getline(&line, &line_size, stdin);
+
+		if (*line != 'y' && *line != 'n')
 		{
-			printf("Aborting.%c or %i\n", *response, *response);
+			printf("Invalid input\n");
+			goto WALLET_LOAD_CREATE_KEY_CONFIRM;
+		}
+
+		if (*line == 'n')
+		{
+			printf("Aborting.\n");
 			return (-1);
 		}
 
@@ -73,13 +86,13 @@ int wallet_load(char **args)
 		if (!wallet)
 		{
 			print_error("wallet_load: failed to create wallet");
-			return (-1);
+			return (errno);
 		}
 
 		if (ec_save(wallet, folder) == -1)
 		{
 			print_error("wallet_load: failed to save wallet");
-			return (-1);
+			return (errno);
 		}
 	}
 
@@ -87,10 +100,11 @@ int wallet_load(char **args)
 	{
 		print_error("wallet_load: failed to add to wallets list");
 		EC_KEY_free(wallet);
-		return (-1);
+		return (errno);
 	}
 
 	printf("Wallet loaded");
+
 	if (strcmp(folder, "."))
 		printf(" from %s\n", folder);
 	else
@@ -120,7 +134,7 @@ int wallet_save(char **args)
 	if (ec_save(current_wallet, folder) == -1)
 	{
 		print_error("wallet_save: failed to save wallet");
-		return (-1);
+		return (errno);
 	}
 
 	if (!args[1])
@@ -227,7 +241,7 @@ int send(char **args)
 	)
 	{
 		print_error("send: could not create transaction");
-		return (-1);
+		return (errno);
 	}
 
 	if (!transaction_is_valid(transaction, blockchain->unspent))
@@ -239,9 +253,9 @@ int send(char **args)
 
 	if (llist_add_node(transaction_pool, transaction, ADD_NODE_REAR) == -1)
 	{
-		print_error("send: could not add add transaction to transaction pool");
+		print_error("send: could not add transaction to transaction pool");
 		transaction_destroy(transaction);
-		return (-1);
+		return (errno);
 	}
 
 	printf("Transaction added to transaction pool\n");
@@ -276,8 +290,28 @@ int info(char **args)
  **/
 int load(char **args)
 {
-	(void)args;
-	printf("This is %s\n", args[0]);
+	blockchain_t *tmp = blockchain_deserialize(args[1]);
+	int i, num_blocks;
+	block_t *prev_block = NULL, *block;
+
+	if (!tmp)
+	{
+		print_error("load");
+		return (errno);
+	}
+	num_blocks = llist_size(tmp->chain);
+	for (i = 0; i < num_blocks; i++)
+	{
+		block = llist_get_node_at(tmp->chain, i);
+		if (!block_is_valid(block, prev_block, tmp->unspent))
+		{
+			print_error("load: Invalid blockchain");
+			blockchain_destroy(tmp);
+			return (-1);
+		}
+		prev_block = block;
+	}
+	blockchain = tmp;
 	return (0);
 }
 /**
@@ -392,8 +426,8 @@ char **getargs(char **args, size_t *args_size, char *line)
  **/
 int main(int ac, char **av)
 {
-	char *line = NULL, **args = NULL;
-	size_t line_size = 0, args_size = 0;
+	char **args = NULL;
+	size_t args_size = 0;
 	int prev_status, status = 0;
 
 	program_name = av[0];
@@ -404,24 +438,26 @@ int main(int ac, char **av)
 		exit(1);
 	}
 
-	running = 1;
 	while (running)
 	{
 		printf("%s", default_prompt);
 
 		memset(line, 0, line_size);
 		if (getline(&line, &line_size, stdin) == -1)
-			error_out("getline");
+		{
+			status = error_out("getline");
+		}
 		else if (!(args = getargs(args, &args_size, line)))
-			error_out("getargs");
-
-		if (*args == NULL)
-			continue;
-
-		prev_status = status;
-		status = execute(args);
-		if (status == KEEP_PREVIOUS_STATUS)
-		status = prev_status;
+		{
+			status = error_out("getargs");
+		}
+		else if (args)
+		{
+			prev_status = status;
+			status = execute(args);
+			if (status == KEEP_PREVIOUS_STATUS)
+				status = prev_status;
+		}
 	}
 	free(line);
 	free(args);

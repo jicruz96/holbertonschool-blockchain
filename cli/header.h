@@ -25,9 +25,11 @@ llist_t *wallets;
 EC_KEY *current_wallet;
 blockchain_t *blockchain;
 llist_t *transaction_pool;
+size_t line_size;
+char *line;
 
 /**
- * struct blockchain_cli_command_s - associates a cli command with a function
+ * struct blockchain_cli_command_s - associates a cli thingie command with a function
  * @command: command (string)
  * @func: associated function that performs command
  **/
