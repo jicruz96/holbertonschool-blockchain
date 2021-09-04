@@ -2,7 +2,7 @@
 #define _TRANSACTION_H_
 
 #include <llist.h>
-#include "../../../crypto/hblk_crypto.h"
+#include <hblk_crypto.h>
 
 #define COINBASE_AMOUNT 50
 

@@ -1,9 +1,8 @@
 #ifndef _BLOCKCHAIN_
 #define _BLOCKCHAIN_
 
-#include <llist.h>
-#include "transaction/transaction.h"
-#include "../../crypto/hblk_crypto.h"
+#include <transaction.h> 
+
 #define true 1
 #define false 0
 #define GENESIS_DATA "Holberton School"
@@ -38,6 +37,11 @@ typedef struct blockchain_s
 	llist_t     *unspent;
 } blockchain_t;
 
+blockchain_t *blockchain_create(void);
+void blockchain_destroy(blockchain_t *blockchain);
+int blockchain_serialize(blockchain_t const *blockchain, char const *path);
+blockchain_t *blockchain_deserialize(char const *path);
+uint32_t blockchain_difficulty(blockchain_t const *blockchain);
 
 /**
  * struct block_info_s - Block info structure
@@ -99,17 +103,12 @@ typedef struct block_s
 } block_t;
 
 /* Blockchain creation and validation functions */
-blockchain_t *blockchain_create(void);
 block_t *block_create(block_t const *prev, int8_t const *data, uint32_t data_len);
 void block_destroy(block_t *block);
-void blockchain_destroy(blockchain_t *blockchain);
 uint8_t *block_hash(block_t const *block, uint8_t hash_buf[SHA256_DIGEST_LENGTH]);
-int blockchain_serialize(blockchain_t const *blockchain, char const *path);
-blockchain_t *blockchain_deserialize(char const *path);
 int block_is_valid(block_t const *block, block_t const *prev_block, llist_t *all_unspent);
 /* Block mining functions */
 int hash_matches_difficulty(uint8_t const hash[SHA256_DIGEST_LENGTH], uint32_t difficulty);
 void block_mine(block_t *block);
-uint32_t blockchain_difficulty(blockchain_t const *blockchain);
 
 #endif /* _BLOCKCHAIN_ */

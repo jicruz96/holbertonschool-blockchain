@@ -10,8 +10,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "../blockchain/v0.3/blockchain.h"
-
+#include <blockchain.h>
 #define default_prompt ">>> "
 #define default_hblk_file "save.hblk"
 #define KEEP_PREVIOUS_STATUS INT_MIN
