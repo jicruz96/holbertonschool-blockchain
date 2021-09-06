@@ -26,6 +26,7 @@ blockchain_t *blockchain;
 llist_t *transaction_pool;
 size_t line_size;
 char *line;
+block_t *prev_block;
 
 /**
  * struct blockchain_cli_command_s - associates a cli thingie command with a function

@@ -37,7 +37,12 @@ __attribute__((constructor))int startup(void)
 	line = NULL;
 	running = 1;
 	current_wallet = NULL;
-	blockchain = NULL;
+	blockchain = blockchain_deserialize(".");
+	if (!blockchain)
+		blockchain = blockchain_create();
+	if (!blockchain)
+		return (error_out("could not load blockchain"));
+	prev_block = llist_get_node_at(blockchain->chain, 0);
 	return (0);
 }
 
@@ -268,8 +273,66 @@ int send(char **args)
  **/
 int mine(char **args)
 {
+	block_t *block;
+	size_t size = llist_size(transaction_pool);
+	size_t i;
+	transaction_t *tx;
+	
 	(void)args;
-	printf("This is %s\n", args[0]);
+	if (llist_size(transaction_pool) == 0)
+	{
+		fprintf(stderr, "mine: No transactions to mine\n");
+		return (-1);
+	}
+	
+	block = block_create(prev_block, NULL, 0);
+	if (!block)
+	{
+		print_error("mine: failed to create block");
+		return (-1);
+	}
+
+	for (i = 0; i < size; i++)
+	{
+		tx = llist_get_node_at(transaction_pool, i);
+		if (transaction_is_valid(tx, blockchain->unspent))
+			llist_add_node(block->transactions, tx, ADD_NODE_REAR);
+	}
+
+	block_mine(block);
+
+	if (!block_is_valid(block, prev_block, blockchain->unspent))
+	{
+		block_destroy(block);
+		fprintf(stderr, "mine: mined block was invalid\n");
+		return (-1);
+	}
+
+	if (llist_add_node(blockchain->chain, block, ADD_NODE_REAR) == -1)
+	{
+		block_destroy(block);
+		fprintf(stderr, "mine: could not add mined block to blockchain\n");
+		return (-1);
+	}
+
+
+	prev_block = block;
+	return (0);
+	
+
+
+/*
+Create a new Block using the Blockchain API
+IF transactions are available in the local transaction pool, include the transactions 1 by 1 in the Block
+Verify the transaction using the list of unspent outputs.
+If the transaction is not valid, do not include it in the Block, and delete it
+Update the list of unspent outputs after a transaction is processed
+Set the difficulty of the Block using the difficulty adjustment method
+Inject a coinbase transaction as the first transaction in the Block
+Mine the Block (proof of work)
+Verify Block validity
+Add the Block to the Blockchain
+*/
 	return (0);
 }
 /**
@@ -280,7 +343,9 @@ int mine(char **args)
 int info(char **args)
 {
 	(void)args;
-	printf("This is %s\n", args[0]);
+ 	printf("Blocks in blockchain: %d\n", llist_size(blockchain->chain));
+ 	printf("Unspent transaction outputs remaining: %d\n", llist_size(blockchain->unspent));
+	printf("Pending transactions in transaction pool: %d\n", llist_size(transaction_pool));
 	return (0);
 }
 /**
@@ -290,7 +355,7 @@ int info(char **args)
  **/
 int load(char **args)
 {
-	blockchain_t *tmp = blockchain_deserialize(args[1]);
+	blockchain_t *tmp = blockchain_deserialize(args[1] ? args[1] : ".");
 	int i, num_blocks;
 	block_t *prev_block = NULL, *block;
 
@@ -311,6 +376,7 @@ int load(char **args)
 		}
 		prev_block = block;
 	}
+	save(NULL);
 	blockchain = tmp;
 	return (0);
 }
@@ -321,9 +387,14 @@ int load(char **args)
  **/
 int save(char **args)
 {
-	(void)args;
-	printf("This is %s\n", args[0]);
-	return (0);
+	int status;
+
+	status = blockchain_serialize(blockchain, args && args[1] ? args[1] : ".");
+	if (status == 0)
+		printf("Blockchain saved in %s\n", args[1] ? args[1] : ".");
+	else
+		print_error("save");
+	return (status);
 }
 /**
  * print_help - function
