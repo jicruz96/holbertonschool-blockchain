@@ -21,7 +21,8 @@ block_t
 	{
 		if (data_len > BLOCKCHAIN_DATA_MAX)
 			data_len = BLOCKCHAIN_DATA_MAX;
-		memcpy(block->data.buffer, data, data_len);
+		if (data_len)
+			memcpy(block->data.buffer, data, data_len);
 		block->data.len = data_len;
 		block->info.difficulty = 0;
 		block->info.nonce = 0;
