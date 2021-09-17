@@ -37,7 +37,7 @@ __attribute__((constructor))int startup(void)
 	line = NULL;
 	running = 1;
 	current_wallet = NULL;
-	blockchain = blockchain_deserialize(".");
+	blockchain = blockchain_deserialize(default_hblk_file);
 	if (!blockchain)
 		blockchain = blockchain_create();
 	if (!blockchain)
@@ -51,8 +51,11 @@ __attribute__((constructor))int startup(void)
  */
 __attribute__((destructor))void cleanup(void)
 {
+	printf("destroying wallets...\n");
 	llist_destroy(wallets, 1, (node_dtor_t)EC_KEY_free);
+	printf("destorying blockchain\n");
 	blockchain_destroy(blockchain);
+	printf("destroying line\n");
 	free(line);
 }
 
@@ -65,6 +68,7 @@ int wallet_load(char **args)
 {
 	char *folder = args[1] ? args[1] : ".";
 	EC_KEY *wallet = ec_load(folder);
+	uint8_t pub[EC_PUB_LEN], i;
 
 	if (!wallet)
 	{
@@ -115,7 +119,15 @@ WALLET_LOAD_CREATE_KEY_CONFIRM:
 	else
 		printf("\n");
 
+	printf("Wallet address: ");
+	ec_to_pub((const EC_KEY *)wallet, pub);
+	for (i = 0; (size_t)i < sizeof(pub) / sizeof(uint8_t); i++)
+		printf("%02x", pub[i]);
+	printf("\n");
+
+
 	current_wallet = wallet;
+	llist_add_node(wallets, wallet, ADD_NODE_REAR);
 
 	return (0);
 }
@@ -279,11 +291,6 @@ int mine(char **args)
 	transaction_t *tx;
 	
 	(void)args;
-	if (llist_size(transaction_pool) == 0)
-	{
-		fprintf(stderr, "mine: No transactions to mine\n");
-		return (-1);
-	}
 	
 	block = block_create(prev_block, NULL, 0);
 	if (!block)
@@ -349,16 +356,45 @@ int info(char **args)
 	return (0);
 }
 /**
+ * save - save function
+ * @args: command arguments
+ * Return: status
+ **/
+int save(char **args)
+{
+	int status;
+	char *path;
+
+	if (args && args[1])
+		path = args[1];
+	else
+		path = default_hblk_file;
+
+	status = blockchain_serialize(blockchain, path);
+	if (status == 0)
+		printf("Blockchain saved in %s\n", path);
+	else
+		print_error("save");
+	return (status);
+}
+/**
  * load - load function
  * @args: command arguments
  * Return: status
  **/
 int load(char **args)
 {
-	blockchain_t *tmp = blockchain_deserialize(args[1] ? args[1] : ".");
+	char *path;
+	blockchain_t *tmp;
 	int i, num_blocks;
 	block_t *prev_block = NULL, *block;
 
+	if (args && args[1])
+		path = args[1];
+	else
+		path = default_hblk_file;
+
+	tmp = blockchain_deserialize(path);
 	if (!tmp)
 	{
 		print_error("load");
@@ -368,7 +404,7 @@ int load(char **args)
 	for (i = 0; i < num_blocks; i++)
 	{
 		block = llist_get_node_at(tmp->chain, i);
-		if (!block_is_valid(block, prev_block, tmp->unspent))
+		if (block_is_valid(block, prev_block, tmp->unspent) == 1)
 		{
 			print_error("load: Invalid blockchain");
 			blockchain_destroy(tmp);
@@ -376,32 +412,28 @@ int load(char **args)
 		}
 		prev_block = block;
 	}
+	printf("Saving current blockchain into file save.hblk... ");
 	save(NULL);
 	blockchain = tmp;
 	return (0);
 }
-/**
- * save - save function
- * @args: command arguments
- * Return: status
- **/
-int save(char **args)
-{
-	int status;
 
-	status = blockchain_serialize(blockchain, args && args[1] ? args[1] : ".");
-	if (status == 0)
-		printf("Blockchain saved in %s\n", args[1] ? args[1] : ".");
-	else
-		print_error("save");
-	return (status);
-}
+#define HELP_STRING \
+"\
+Valid commands:\n\
+    * help\n\
+    * load [path-of-blockchain-file] (\"./save.hblk\" by default)\n\
+    * save [path-of-blockchain-file] (\"./save.hblk\" by default)\n\
+    * wallet_load\n\
+    * wallet_save\n\
+    * info\n\
+"
 /**
  * print_help - function
  **/
 void print_help(void)
 {
-	printf("This is help\n");
+	printf(HELP_STRING);
 }
 /**
  * my_exit - my_exit function
@@ -530,7 +562,6 @@ int main(int ac, char **av)
 				status = prev_status;
 		}
 	}
-	free(line);
 	free(args);
 	return (status);
 }
