@@ -57,7 +57,7 @@ static FILE *open_file(char const *folder, char const *filename, char *mode)
 	if (!filepath)
 		return (NULL);
 
-	sprintf(filepath, "%s/%s", folder, filename);
+	sprintf(filepath, "%s%s%s", folder, folder[strlen(folder) - 1] == '/' ? "" : "/", filename);
 	file = fopen(filepath, mode);
 	free(filepath);
 	return (file);

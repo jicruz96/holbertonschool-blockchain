@@ -15,10 +15,14 @@ EC_KEY *ec_load(char const *folder)
 	EC_KEY *key;
 
 	if (!(pubfile  = open_file(folder, PUB_FILENAME, "r")))
+	{
+		fprintf(stderr, "ec_load: No public key in folder [%s]\n", folder);
 		return (NULL);
+	}
 
 	if (!(privfile = open_file(folder, PRI_FILENAME, "r")))
 	{
+		fprintf(stderr, "ec_load: No private key in folder [%s]\n", folder);
 		fclose(pubfile);
 		return (NULL);
 	}
@@ -30,6 +34,7 @@ EC_KEY *ec_load(char const *folder)
 	)
 	{
 		EC_KEY_free(key);
+		fprintf(stderr, "ec_load: unable to create key\n");
 		key = NULL;
 	}
 
@@ -57,7 +62,7 @@ static FILE *open_file(char const *folder, char const *filename, char *mode)
 	if (!filepath)
 		return (NULL);
 
-	sprintf(filepath, "%s/%s", folder, filename);
+	sprintf(filepath, "%s%s%s", folder, folder[strlen(folder) - 1] == '/' ? "" : "/", filename);
 	file = fopen(filepath, mode);
 	free(filepath);
 	return (file);
